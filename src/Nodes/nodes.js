@@ -10,5 +10,7 @@ export const nodeTypes = {
     "explore": ExploreNode,
     "item": ItemNode,
     "meal-option": OptionNode,
-    "meal-item": ItemNode
+    "meal-item": ItemNode,
+    "meal-option-3": OptionNode,
+    "end-detail": ItemNode
 };

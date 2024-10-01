@@ -18,4 +18,15 @@ const GetMealsByCategory = async (category) => {
     }
 }
 
-export {GetAllCategories, GetMealsByCategory};
+const GetIngredientsOrTags = async (name) => {
+    try {
+        const response = await axios.get(`https://www.themealdb.com/api/json/v1/1/search.php?s=${name}`);
+        return response?.data?.meals;
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+
+
+export {GetAllCategories, GetMealsByCategory, GetIngredientsOrTags};

@@ -11,10 +11,10 @@ const OptionNode = ({ data }) => {
         borderRadius: 25,
         borderColor: "red",
         borderWidth: 1,
-        padding: 5,
+        padding: 10,
         boxSizing: 'border-box',
         backgroundColor: "rgba(255, 255, 255, 0.3)",
-        width: 150,
+        width: 200,
         height: 30
       }}
     >
