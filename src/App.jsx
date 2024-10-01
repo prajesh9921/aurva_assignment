@@ -16,23 +16,21 @@ import {
   GetIngredientsOrTags,
 } from "./Api/api";
 import { RiShareForwardLine } from "react-icons/ri";
-
-// const initialNodes = [
-//   { id: "1", position: { x: 0, y: 0 }, data: { label: "1" } },
-//   { id: "2", position: { x: 0, y: 100 }, data: { label: "2" } },
-// ];
-// const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
+import { RxCross2 } from "react-icons/rx";
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [data, setData] = useState([]);
+  const [mealData, setMealData] = useState([]);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
+  // Function to fetch categories
   const fetchCategories = async () => {
     const response = await GetAllCategories();
     const categories = response?.slice(0, 5); // Get top-5 categories
@@ -54,9 +52,9 @@ export default function App() {
     setEdges((prev) => [...prev, ...categoryEdges]);
   };
 
+  // Function to fetch meals
   const fetchMeals = async (category) => {
     const response = await GetMealsByCategory(category);
-    console.log(response);
     const meals = response.slice(0, 5); // Get top-5 meals
 
     const mealNodes = meals?.map((meal, index) => {
@@ -79,6 +77,7 @@ export default function App() {
     setEdges((prev) => [...prev, ...mealEdges]);
   };
 
+  // Function to add option node
   const AddOptionNode = (element) => {
     const optionNode = {
       id: "meal-option",
@@ -119,6 +118,7 @@ export default function App() {
     });
   };
 
+  // Function to add three option node - ingredients, tags, and details
   const AddThreeOptionNode = (element) => {
     const optionNode = [
       {
@@ -195,54 +195,12 @@ export default function App() {
     });
   };
 
-  // const fetchIngredientOrTags = async (value, id) => {
-  //   const response = await GetIngredientsOrTags(value);
-  //   const filterresponse = response.filter((item) => item.strMeal === value);
-
-  //   console.log(filterresponse);
-
-  //   if (id === "ingredient-option") {
-  //     let ingredientsarr = [];
-  //     for (let i = 1; i <= 20; i++) {
-  //       const ingredient = filterresponse[0][`strIngredient${i}`];
-  //       if (ingredient) {
-  //         ingredientsarr.push(ingredient);
-  //       }
-  //     }
-  //     setData(ingredientsarr);
-  //   } else if (id === "tag-option") {
-  //     const tags = filterresponse[0]?.strTags ? filterresponse[0]?.strTags.split(",") : [];
-  //     setData(tags);
-  //   } else if (id === "detail-option") {
-  //     console.log("details");
-  //     console.log(data);
-  //   }
-
-  //   const newNodes = data?.map((item, index) => {
-  //     const nodeId = `last-${index + 1}`;
-  //     return {
-  //       id: nodeId,
-  //       type: "end-detail",
-  //       data: { label: item, image: "https://img.icons8.com/fluency/48/circled.png" },
-  //       position: { x: 1800, y: 50 + index * 100 },
-  //     };
-  //   });
-
-  //   const newEdges = data.map((_, index) => ({
-  //     id: `end-edge-${index}`,
-  //     source: id,
-  //     target: `last-${index + 1}`,
-  //   }));
-
-  //   setNodes((prev) => [...prev, ...newNodes]);
-  //   setEdges((prev) => [...prev, ...newEdges]);
-  // };
-
+  // Function to fetch nodes with respect to option pressed.
   const fetchIngredientOrTags = async (value, id) => {
     const response = await GetIngredientsOrTags(value);
     const filterresponse = response.filter((item) => item.strMeal === value);
 
-    console.log(filterresponse);
+    setMealData(filterresponse[0]);
 
     if (id === "ingredient-option") {
       let ingredientsarr = [];
@@ -259,8 +217,7 @@ export default function App() {
         : [];
       setData(tags);
     } else if (id === "detail-option") {
-      console.log("details");
-      console.log(data);
+      setShowSidebar(true);
     }
 
     // Create new nodes and edges
@@ -298,6 +255,7 @@ export default function App() {
     setEdges((prev) => [...filteredEdges(prev), ...newEdges]);
   };
 
+  // Function to handle nodes click event
   const onElementClick = (event, element) => {
     if (element.type === "explore") {
       fetchCategories();
@@ -308,16 +266,12 @@ export default function App() {
     } else if (element.type === "meal-item") {
       AddThreeOptionNode(element);
     } else if (element.type === "meal-option-3") {
-      if (element.id === "detail-option") {
-        console.log("detail");
-      } else {
-        fetchIngredientOrTags(element.data.category, element.id);
-      }
+      fetchIngredientOrTags(element.data.category, element.id);
     }
   };
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -327,11 +281,116 @@ export default function App() {
         onConnect={onConnect}
         colorMode="system"
         onNodeClick={onElementClick}
-        fitView
       >
         <Controls />
         <Background variant="dots" gap={12} size={1} />
       </ReactFlow>
+
+      {/* SideBar */}
+      {showSidebar ? (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            height: "100%",
+            width: "25%",
+            boxSizing: "border-box",
+            backgroundColor: "#fff",
+            padding: 10,
+            color: "#989899",
+            overflow: "auto",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <h3 style={{ fontWeight: "bold" }}>{mealData?.strMeal}</h3>
+            <RxCross2
+              size={25}
+              style={{ cursor: "pointer" }}
+              onClick={() => setShowSidebar(false)}
+            />
+          </div>
+
+          {/* imgae */}
+          <img
+            style={{ objectFit: "cover", width: "100%", height: "40%" }}
+            src={mealData?.strMealThumb}
+            alt="meal"
+          />
+
+          {/* Tags */}
+          <div
+            style={{
+              display: "flex",
+              gap: 5,
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}
+          >
+            {mealData?.strTags?.split(",")?.map((item, index) => (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: "rgba(201, 159, 237, 0.5)",
+                  borderRadius: 15,
+                  borderStyle: "solid",
+                  borderWidth: 1,
+                  borderColor: "#c99fed",
+                  height: 30,
+                  padding: 8,
+                  boxSizing: "border-box",
+                  textAlign: "center",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  display: "flex",
+                  marginTop: 5,
+                }}
+              >
+                <span style={{ color: "#000" }}>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Info */}
+
+          <div style={{ display: "flex", fontSize: "14px" }}>
+            <p style={{ flex: 1 }}>Category</p>
+            <p style={{ flex: 1 }}>{mealData?.strCategory}</p>
+          </div>
+
+          <div style={{ display: "flex", fontSize: "14px" }}>
+            <p style={{ flex: 1 }}>Area</p>
+            <p style={{ flex: 1 }}>{mealData?.strArea}</p>
+          </div>
+
+          <div style={{ display: "flex", fontSize: "14px" }}>
+            <p style={{ flex: 1 }}>Youtube</p>
+            <p style={{ flex: 1 }}>{mealData?.strYoutube}</p>
+          </div>
+
+          {/* Instruction */}
+          <div
+            style={{
+              padding: 8,
+              boxSizing: "border-box",
+              fontSize: 12,
+              color: "#000",
+              borderStyle: "solid",
+              borderWidth: 1,
+              borderColor: "#000",
+            }}
+          >
+            <p style={{ fontWeight: "bold" }}>Instruction</p>
+            <p>{mealData?.strInstructions}</p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
