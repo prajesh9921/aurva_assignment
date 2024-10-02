@@ -31,7 +31,7 @@ export default function App() {
   );
 
   // Function to fetch categories
-  const fetchCategories = async () => {
+  const fetchCategories = async (element) => {
     const response = await GetAllCategories();
     const categories = response?.slice(0, 5); // Get top-5 categories
 
@@ -39,7 +39,7 @@ export default function App() {
       id: `category-${index + 1}`,
       type: "item",
       data: { label: category?.strCategory, image: category?.strCategoryThumb },
-      position: { x: 300, y: 50 + index * 100 },
+      position: { x: element.position.x + 200, y: element.position.y/2 + index * 100 },
     }));
 
     const categoryEdges = categories.map((_, index) => ({
@@ -53,7 +53,7 @@ export default function App() {
   };
 
   // Function to fetch meals
-  const fetchMeals = async (category) => {
+  const fetchMeals = async (category, x, y) => {
     const response = await GetMealsByCategory(category);
     const meals = response.slice(0, 5); // Get top-5 meals
 
@@ -63,7 +63,7 @@ export default function App() {
         id: nodeId,
         type: "meal-item",
         data: { label: meal?.strMeal, image: meal?.strMealThumb },
-        position: { x: 900, y: 50 + index * 150 },
+        position: { x: x + 250, y: (y - 100) + index * 150 },
       };
     });
 
@@ -87,7 +87,7 @@ export default function App() {
         label: "View Meals",
         category: element.data.label,
       },
-      position: { x: 600, y: 300 },
+      position: { x: element.position.x + 250, y: 300 },
     };
     const newEdge = {
       id: "meal-option",
@@ -120,6 +120,9 @@ export default function App() {
 
   // Function to add three option node - ingredients, tags, and details
   const AddThreeOptionNode = (element) => {
+    const X = element.position.x + 250;
+    const Y = element.position.y;
+
     const optionNode = [
       {
         id: "ingredient-option",
@@ -129,7 +132,7 @@ export default function App() {
           label: "View Ingredients",
           category: element.data.label,
         },
-        position: { x: 1300, y: 300 },
+        position: { x: X, y: Y},
       },
       {
         id: "tag-option",
@@ -139,7 +142,7 @@ export default function App() {
           label: "View Tags",
           category: element.data.label,
         },
-        position: { x: 1300, y: 400 },
+        position: { x: X, y: Y + 50},
       },
       {
         id: "detail-option",
@@ -149,7 +152,7 @@ export default function App() {
           label: "View Details",
           category: element.data.label,
         },
-        position: { x: 1300, y: 500 },
+        position: { x: X, y: Y + 100},
       },
     ];
 
@@ -196,7 +199,7 @@ export default function App() {
   };
 
   // Function to fetch nodes with respect to option pressed.
-  const fetchIngredientOrTags = async (value, id) => {
+  const fetchIngredientOrTags = async (value, id, element) => {
     const response = await GetIngredientsOrTags(value);
     const filterresponse = response.filter((item) => item.strMeal === value);
 
@@ -230,7 +233,7 @@ export default function App() {
           label: item,
           image: "https://img.icons8.com/fluency/48/circled.png",
         },
-        position: { x: 1800, y: 50 + index * 100 },
+        position: { x: element.position.x + 300, y: (element.position.y - 100) + index * 100 },
       };
     });
 
@@ -258,15 +261,15 @@ export default function App() {
   // Function to handle nodes click event
   const onElementClick = (event, element) => {
     if (element.type === "explore") {
-      fetchCategories();
+      fetchCategories(element);
     } else if (element.type === "item") {
       AddOptionNode(element);
     } else if (element.type === "meal-option") {
-      fetchMeals(element.data.category);
+      fetchMeals(element.data.category, element.position.x, element.position.y);
     } else if (element.type === "meal-item") {
       AddThreeOptionNode(element);
     } else if (element.type === "meal-option-3") {
-      fetchIngredientOrTags(element.data.category, element.id);
+      fetchIngredientOrTags(element.data.category, element.id, element);
     }
   };
 
